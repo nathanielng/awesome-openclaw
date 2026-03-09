@@ -7,9 +7,8 @@
 - **Discord**: [https://discord.com/invite/qkhbAGHRBT](https://discord.com/invite/qkhbAGHRBT)
 - **Luma** (Meetups): [https://luma.com/claw](https://luma.com/claw)
 - **X**: [https://x.com/openclaw](https://x.com/openclaw)
-
-
 - **OpenClaw Singapore**: [Instagram](https://www.instagram.com/clawsingapore) | [Substack](https://clawsg.substack.com/) | [X](https://x.com/openclawsg)
+
 
 ## 2. OpenClaw News, Commentary, Blogs, Videos
 
@@ -35,10 +34,24 @@
 - [Kimi Claw](https://www.kimi.com/bot)
 
 
+## 4. OpenClaw Usage
 
-## 4. FAQ
+```bash
+openclaw --version  # Get OpenClaw version
+openclaw update     # Update OpenClaw
+openclaw doctor     # 
+```
 
-### 4.1 Using MCPs vs Code Execution
+Other ways to update OpenClaw
+
+```
+npm install -g openclaw@latest
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+## 5. FAQ
+
+### 5.1 Using MCPs vs Code Execution
 
 1. [Code execution with MCP: Building more efficient agents](https://www.anthropic.com/engineering/code-execution-with-mcp) | Anthropic
 2. [Code Mode: the better way to use MCP](https://blog.cloudflare.com/code-mode/) | The Cloudflare Blog
