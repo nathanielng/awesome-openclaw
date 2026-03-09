@@ -11,22 +11,29 @@
 
 - **OpenClaw Singapore**: [Instagram](https://www.instagram.com/clawsingapore) | [Substack](https://clawsg.substack.com/) | [X](https://x.com/openclawsg)
 
-## 2. OpenClaw News & Commentary
+## 2. OpenClaw News, Commentary, Blogs, Videos
 
 - 2026.02.14 [OpenClaw, OpenAI and the future](https://steipete.me/posts/2026/openclaw) | Peter Steinberger
+- 2026.02.12 [OpenClaw: The Viral AI Agent that Broke the Internet - Peter Steinberger](https://www.youtube.com/watch?v=YFjfBk8HI5o) | Lex Fridman Podcast | Youtube
 
 
-## 3. OpenClaw on AWS
+## 3. Hosting
 
-### 3.1 Official
+### 3.1 AWS
 
 - **Documentation**: [Get started with OpenClaw on Lightsail](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html)
 - **Blog**: [Introducing OpenClaw on Amazon Lightsail to run your autonomous private AI agents](https://aws.amazon.com/blogs/aws/introducing-openclaw-on-amazon-lightsail-to-run-your-autonomous-private-ai-agents/) (4 Mar 2026)
 
-
-### 3.2 Blog posts
+**Community Blog posts**
 
 - 2026.01.29 [Deploy Moltbot on AWS-- A Decision Worth Making](https://builder.aws.com/content/38v1OFpMzs1xofBgM17CWn604lV/deploy-moltbot-on-aws-a-decision-worth-making). Github: [https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock](https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock) | Builder Center
+
+
+### 3.2 Other
+
+- [Digital Ocean](https://marketplace.digitalocean.com/apps/openclaw) ([announcement](https://www.digitalocean.com/blog/moltbot-on-digitalocean))
+- [Kimi Claw](https://www.kimi.com/bot)
+
 
 
 ## 4. FAQ
