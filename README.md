@@ -1,10 +1,15 @@
 # Awesome OpenClaw
 
-## 1. Links
+## 1. OpenClaw
 
 - **Home**: [https://openclaw.ai/](https://openclaw.ai/)
 - **Github**: [https://github.com/openclaw/openclaw](https://github.com/openclaw/openclaw)
+- **Discord**: [https://discord.com/invite/qkhbAGHRBT](https://discord.com/invite/qkhbAGHRBT)
+- **Luma** (Meetups): [https://luma.com/claw](https://luma.com/claw)
+- **X**: [https://x.com/openclaw](https://x.com/openclaw)
 
+
+- **OpenClaw Singapore**: [Instagram](https://www.instagram.com/clawsingapore) | [Substack](https://clawsg.substack.com/) | [X](https://x.com/openclawsg)
 
 ## 2. OpenClaw News & Commentary
 
