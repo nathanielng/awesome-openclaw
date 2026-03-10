@@ -7,7 +7,7 @@
 - **Discord**: [https://discord.com/invite/qkhbAGHRBT](https://discord.com/invite/qkhbAGHRBT)
 - **Luma** (Meetups): [https://luma.com/claw](https://luma.com/claw)
 - **X**: [https://x.com/openclaw](https://x.com/openclaw)
-- **OpenClaw Singapore**: [Instagram](https://www.instagram.com/clawsingapore) | [Substack](https://clawsg.substack.com/) | [X](https://x.com/openclawsg)
+- **OpenClaw Singapore**: [Instagram](https://www.instagram.com/clawsingapore) | [LinkedIn](https://www.linkedin.com/company/clawsingapore) | [Substack](https://clawsg.substack.com/) | [X](https://x.com/openclawsg)
 
 
 ## 2. OpenClaw News, Commentary, Blogs, Videos
@@ -39,10 +39,15 @@
 - 2026.01.29 [Deploy Moltbot on AWS-- A Decision Worth Making](https://builder.aws.com/content/38v1OFpMzs1xofBgM17CWn604lV/deploy-moltbot-on-aws-a-decision-worth-making). Github: [https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock](https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock) | Builder Center
 
 
-### 3.2 Other
+### 3.2 Digital Ocean, Kimi, ...
 
 - [Digital Ocean](https://marketplace.digitalocean.com/apps/openclaw) ([announcement](https://www.digitalocean.com/blog/moltbot-on-digitalocean))
 - [Kimi Claw](https://www.kimi.com/bot)
+
+### 3.3 Integrations
+
+- [OpenRouter](https://openrouter.ai/docs/guides/guides/coding-agents/openclaw-integration)
+- [SEA-LION](https://sea-lion.ai/blog/openclaw-with-sea-lion-running-multilingual-personal-ai-assistants/)
 
 
 ## 4. OpenClaw Usage
@@ -53,11 +58,18 @@ openclaw update     # Update OpenClaw
 openclaw doctor     # 
 ```
 
-Other ways to update OpenClaw
+Install or update OpenClaw (Preferred versions: v2026.3.8 or later)
 
 ```
-npm install -g openclaw@latest
 curl -fsSL https://openclaw.ai/install.sh | bash
+npm install -g openclaw@latest
+```
+
+[OpenClaw Security](https://docs.openclaw.ai/gateway/security)
+
+```bash
+openclaw security audit --deep                                                            │
+openclaw security audit --fix
 ```
 
 ## 5. FAQ
