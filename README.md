@@ -49,6 +49,10 @@
 - [OpenRouter](https://openrouter.ai/docs/guides/guides/coding-agents/openclaw-integration)
 - [SEA-LION](https://sea-lion.ai/blog/openclaw-with-sea-lion-running-multilingual-personal-ai-assistants/)
 
+### 3.4 Skills
+
+- [Anthropic Skills](https://github.com/anthropics/skills/tree/main/skills)
+
 
 ## 4. OpenClaw Usage
 
