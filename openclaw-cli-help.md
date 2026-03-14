@@ -343,6 +343,212 @@ Default sandbox denylist: `browser, canvas, nodes, cron, discord, gateway`
 
 ---
 
+## Messaging & Provider Setup
+
+### Telegram
+
+1. **Create a bot** — Open [@BotFather](https://t.me/BotFather) on Telegram, send `/newbot`, and follow the prompts to get a bot token (`123456789:ABCdef...`).
+
+2. **Add the token** to `~/.openclaw/.env`:
+   ```bash
+   TELEGRAM_BOT_TOKEN=123456789:ABCdef...
+   ```
+
+3. **Enable the channel**:
+   ```bash
+   openclaw channels add
+   # select "Telegram" from the list, paste your token when prompted
+   ```
+   Or set it directly in `~/.openclaw/openclaw.json`:
+   ```json5
+   channels: {
+     telegram: {
+       botToken: "${TELEGRAM_BOT_TOKEN}",
+       enabled: true,
+       dmPolicy: "pairing",   // pairing | allowlist | open | disabled
+       streamMode: "partial"  // partial | full | off
+     }
+   }
+   ```
+
+4. **Start the gateway** and message your bot on Telegram:
+   ```bash
+   openclaw gateway restart
+   ```
+
+5. **Pair your Telegram account** — send any message to the bot; it replies with a pairing code. Run `openclaw channels login` and enter the code to allowlist yourself.
+
+---
+
+### Slack
+
+1. **Create a Slack App** at [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From scratch**.
+
+2. **Enable Socket Mode** (Apps & Connections → Socket Mode → Enable) — copy the **App-Level Token** (`xapp-...`).
+
+3. **Subscribe to Bot Events** (Event Subscriptions → Subscribe to bot events):
+   - `message.channels`, `message.groups`, `message.im`, `message.mpim`
+
+4. **Add OAuth Scopes** (OAuth & Permissions → Bot Token Scopes):
+   `chat:write`, `channels:history`, `groups:history`, `im:history`, `im:read`, `im:write`
+
+5. **Install the app** to your workspace and copy the **Bot User OAuth Token** (`xoxb-...`).
+
+6. **Add tokens** to `~/.openclaw/.env`:
+   ```bash
+   SLACK_BOT_TOKEN=xoxb-...
+   SLACK_APP_TOKEN=xapp-...
+   ```
+
+7. **Add the channel**:
+   ```bash
+   openclaw channels add   # select "Slack"
+   ```
+   Or configure manually in `openclaw.json`:
+   ```json5
+   channels: {
+     slack: {
+       botToken: "${SLACK_BOT_TOKEN}",
+       appToken: "${SLACK_APP_TOKEN}",
+       enabled: true,
+       dmPolicy: "pairing"
+     }
+   }
+   ```
+
+8. **Restart and invite the bot** to a Slack channel with `/invite @YourBotName`.
+
+---
+
+### Discord
+
+1. **Create an application** at [discord.com/developers/applications](https://discord.com/developers/applications) → **New Application**.
+
+2. Open **Bot** → **Add Bot** → enable **Message Content Intent**, **Server Members Intent**, and **Presence Intent** under Privileged Gateway Intents.
+
+3. Copy the **Bot Token** (Bot → Reset Token).
+
+4. **Invite the bot** to your server using OAuth2 → URL Generator:
+   - Scopes: `bot`
+   - Bot Permissions: `Send Messages`, `Read Message History`, `View Channels`
+
+5. **Add the token** to `~/.openclaw/.env`:
+   ```bash
+   DISCORD_BOT_TOKEN=MTI3...
+   ```
+
+6. **Add the channel**:
+   ```bash
+   openclaw channels add   # select "Discord"
+   ```
+   Or in `openclaw.json`:
+   ```json5
+   channels: {
+     discord: {
+       botToken: "${DISCORD_BOT_TOKEN}",
+       enabled: true,
+       dmPolicy: "pairing"
+     }
+   }
+   ```
+
+7. ```bash
+   openclaw gateway restart
+   ```
+
+---
+
+### WhatsApp
+
+OpenClaw connects to WhatsApp via the **WhatsApp Business API** (Meta Cloud API) or a compatible bridge (e.g., [whatsapp-web.js](https://wwebjs.dev/) in bridge mode).
+
+#### Option A — Meta Cloud API (recommended for production)
+
+1. Set up a **Meta Business App** at [developers.facebook.com](https://developers.facebook.com) with the **WhatsApp** product.
+2. Add a phone number and verify it in the WhatsApp Manager.
+3. Copy the **Permanent Access Token** and **Phone Number ID**.
+4. Set a **Webhook** URL pointing to your OpenClaw gateway:
+   - URL: `https://<your-domain>:18789/webhooks/whatsapp`
+   - Verify token: any secret string you choose
+   - Subscribe to: `messages`
+
+5. Add to `~/.openclaw/.env`:
+   ```bash
+   WHATSAPP_ACCESS_TOKEN=EAAl...
+   WHATSAPP_PHONE_NUMBER_ID=12345678901234
+   WHATSAPP_WEBHOOK_VERIFY_TOKEN=my-secret
+   ```
+
+6. Configure in `openclaw.json`:
+   ```json5
+   channels: {
+     whatsapp: {
+       provider: "meta-cloud",
+       accessToken: "${WHATSAPP_ACCESS_TOKEN}",
+       phoneNumberId: "${WHATSAPP_PHONE_NUMBER_ID}",
+       webhookVerifyToken: "${WHATSAPP_WEBHOOK_VERIFY_TOKEN}",
+       enabled: true,
+       dmPolicy: "pairing"
+     }
+   }
+   ```
+
+#### Option B — Local QR-code bridge
+
+```bash
+openclaw channels add   # select "WhatsApp (bridge)"
+# follow the on-screen QR code prompt and scan with your phone
+```
+
+---
+
+### OpenRouter
+
+[OpenRouter](https://openrouter.ai) provides a unified API for hundreds of models (GPT-4o, Gemini, Mistral, etc.) through an OpenAI-compatible endpoint.
+
+1. **Get an API key** at [openrouter.ai/keys](https://openrouter.ai/keys).
+
+2. **Add the key** to `~/.openclaw/.env`:
+   ```bash
+   OPENROUTER_API_KEY=sk-or-...
+   ```
+
+3. **Configure the provider** in `openclaw.json`:
+   ```json5
+   models: {
+     providers: {
+       openrouter: {
+         baseUrl: "https://openrouter.ai/api/v1",
+         apiKey: "${OPENROUTER_API_KEY}",
+         api: "openai-completions"
+       }
+     }
+   }
+   ```
+
+4. **Set OpenRouter as your active model** (pick any model slug from [openrouter.ai/models](https://openrouter.ai/models)):
+   ```bash
+   openclaw models set openrouter/google/gemini-2.0-flash-exp
+   openclaw models set openrouter/mistralai/mistral-large
+   openclaw models set openrouter/meta-llama/llama-3.1-405b-instruct
+   ```
+
+5. **Add fallbacks** across providers:
+   ```bash
+   openclaw models fallbacks add openrouter/openai/gpt-4o
+   openclaw models fallbacks add openrouter/anthropic/claude-opus-4-6
+   ```
+
+6. **Verify** the connection:
+   ```bash
+   openclaw models scan
+   openclaw doctor
+   ```
+
+> **Tip**: Use OpenRouter model aliases to switch models in-chat: add an alias with `openclaw models aliases add gemini openrouter/google/gemini-2.0-flash-exp`, then type `/model gemini` in any conversation.
+
+---
+
 ## Environment Variables
 
 Stored in `~/.openclaw/.env`:

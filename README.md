@@ -13,6 +13,7 @@
 ## 2. Resources in this Repo
 
 - [openclaw-cli-help.md](openclaw-cli-help.md) — OpenClaw CLI comprehensive reference
+  - [Messaging & Provider Setup](openclaw-cli-help.md#messaging--provider-setup) — Step-by-step setup for Telegram, Slack, Discord, WhatsApp, and OpenRouter
 - [obsidian-cli-help.md](obsidian-cli-help.md) — Obsidian CLI command reference
 
 
