@@ -10,9 +10,15 @@
 - **OpenClaw Singapore**: [ClawJunction](https://www.clawjunction.com/) | [Instagram](https://www.instagram.com/clawsingapore) | [LinkedIn](https://www.linkedin.com/company/clawsingapore) | [Substack](https://clawsg.substack.com/) | [X](https://x.com/openclawsg)
 
 
-## 2. OpenClaw News, Commentary, Blogs, Videos
+## 2. Resources in this Repo
 
-### 2.1 Peter Steinberger
+- [openclaw-cli-help.md](openclaw-cli-help.md) — OpenClaw CLI comprehensive reference
+- [obsidian-cli-help.md](obsidian-cli-help.md) — Obsidian CLI command reference
+
+
+## 3. OpenClaw News, Commentary, Blogs, Videos
+
+### 3.1 Peter Steinberger
 
 - 2026.02.25 [Builders Unscripted: Ep. 1 - Peter Steinberger, Creator of OpenClaw](https://www.youtube.com/watch?v=9jgcT0Fqt7U)
 - 2026.02.14 [OpenClaw, OpenAI and the future](https://steipete.me/posts/2026/openclaw) | Peter Steinberger
@@ -21,64 +27,61 @@
 - 2026.02.12 [How to code with AI agents - Advice from OpenClaw creator](https://www.youtube.com/watch?v=wKy1_KLcxcs) | Peter Steinberger and Lex Fridman
 - 2026.02.12 [OpenClaw: The Viral AI Agent that Broke the Internet - Peter Steinberger](https://www.youtube.com/watch?v=YFjfBk8HI5o) | Lex Fridman Podcast | Youtube
 
-
-### 2.2 Others
+### 3.2 Others
 
 - 2026.03.03 [OpenClaw is 100x better with this tool (Mission Control)](https://www.youtube.com/watch?v=RhLpV6QDBFE) | Alex Finn
 
 
-## 3. Hosting
+## 4. Hosting & Integrations
 
-### 3.1 AWS
+### 4.1 Hosting Platforms
 
-- **Documentation**: [Get started with OpenClaw on Lightsail](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html)
-- **Blog**: [Introducing OpenClaw on Amazon Lightsail to run your autonomous private AI agents](https://aws.amazon.com/blogs/aws/introducing-openclaw-on-amazon-lightsail-to-run-your-autonomous-private-ai-agents/) (4 Mar 2026)
+- **AWS**: [Get started with OpenClaw on Lightsail](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html) | [Introducing OpenClaw on Amazon Lightsail](https://aws.amazon.com/blogs/aws/introducing-openclaw-on-amazon-lightsail-to-run-your-autonomous-private-ai-agents/) (4 Mar 2026)
+- **Digital Ocean**: [Marketplace](https://marketplace.digitalocean.com/apps/openclaw) | [Announcement](https://www.digitalocean.com/blog/moltbot-on-digitalocean)
+- **Kimi**: [Kimi Claw](https://www.kimi.com/bot)
 
-**Community Blog posts**
+**Community blog posts**
 
-- 2026.01.29 [Deploy Moltbot on AWS-- A Decision Worth Making](https://builder.aws.com/content/38v1OFpMzs1xofBgM17CWn604lV/deploy-moltbot-on-aws-a-decision-worth-making). Github: [https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock](https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock) | Builder Center
+- 2026.01.29 [Deploy Moltbot on AWS — A Decision Worth Making](https://builder.aws.com/content/38v1OFpMzs1xofBgM17CWn604lV/deploy-moltbot-on-aws-a-decision-worth-making) | Builder Center — Github: [aws-samples/sample-OpenClaw-on-AWS-with-Bedrock](https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock)
 
-
-### 3.2 Digital Ocean, Kimi, ...
-
-- [Digital Ocean](https://marketplace.digitalocean.com/apps/openclaw) ([announcement](https://www.digitalocean.com/blog/moltbot-on-digitalocean))
-- [Kimi Claw](https://www.kimi.com/bot)
-
-### 3.3 Integrations
+### 4.2 Integrations
 
 - [OpenRouter](https://openrouter.ai/docs/guides/guides/coding-agents/openclaw-integration)
 - [SEA-LION](https://sea-lion.ai/blog/openclaw-with-sea-lion-running-multilingual-personal-ai-assistants/)
 
-### 3.4 Skills
+### 4.3 Skills
 
 - [Anthropic Skills](https://github.com/anthropics/skills/tree/main/skills)
 
 
-## 4. OpenClaw Usage
+## 5. OpenClaw Usage
+
+Install or update OpenClaw (preferred versions: v2026.3.8 or later):
 
 ```bash
-openclaw --version  # Get OpenClaw version
-openclaw update     # Update OpenClaw
-openclaw doctor     # 
-```
-
-Install or update OpenClaw (Preferred versions: v2026.3.8 or later)
-
-```
 curl -fsSL https://openclaw.ai/install.sh | bash
 npm install -g openclaw@latest
 ```
 
-[OpenClaw Security](https://docs.openclaw.ai/gateway/security)
+Common commands:
 
 ```bash
-openclaw security audit --deep                                                            │
+openclaw --version  # Get OpenClaw version
+openclaw update     # Update OpenClaw
+openclaw doctor     # Check system health
+```
+
+Security audit ([docs](https://docs.openclaw.ai/gateway/security)):
+
+```bash
+openclaw security audit --deep
 openclaw security audit --fix
 ```
 
-## 5. FAQ
 
-### 5.1 Using MCPs vs Code Execution
+## 6. FAQ
+
+### 6.1 Using MCPs vs Code Execution
 
 1. [Code execution with MCP: Building more efficient agents](https://www.anthropic.com/engineering/code-execution-with-mcp) | Anthropic
 2. [Code Mode: the better way to use MCP](https://blog.cloudflare.com/code-mode/) | The Cloudflare Blog
