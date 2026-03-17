@@ -30,7 +30,11 @@
 - 2026.02.12 [How to code with AI agents - Advice from OpenClaw creator](https://www.youtube.com/watch?v=wKy1_KLcxcs) | Peter Steinberger and Lex Fridman
 - 2026.02.12 [OpenClaw: The Viral AI Agent that Broke the Internet - Peter Steinberger](https://www.youtube.com/watch?v=YFjfBk8HI5o) | Lex Fridman Podcast | Youtube
 
-### 3.2 Others
+### 3.2 Jensen Huang
+
+- 2026.03.17 [NVIDIA's Jenson Hwang launches NemoClaw to the OpenClaw community](https://www.youtube.com/watch?v=kRmZ5zmMS2o)
+
+### 3.3 Others
 
 - 2026.03.03 [OpenClaw is 100x better with this tool (Mission Control)](https://www.youtube.com/watch?v=RhLpV6QDBFE) | Alex Finn
 
@@ -39,8 +43,9 @@
 
 ### 4.1 Hosting Platforms
 
-- **AWS/Lightsail**: [Get started with OpenClaw on Lightsail](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html) | [Introducing OpenClaw on Amazon Lightsail](https://aws.amazon.com/blogs/aws/introducing-openclaw-on-amazon-lightsail-to-run-your-autonomous-private-ai-agents/) (4 Mar 2026)
-- **AWS/Bedrock AgentCore**: Github: [sample-host-openclaw-on-amazon-bedrock-agentcore](https://github.com/aws-samples/sample-host-openclaw-on-amazon-bedrock-agentcore)
+- **AWS/Lightsail**: [Get started with OpenClaw on Lightsail](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-quick-start-guide-openclaw.html) | [Introducing OpenClaw on Amazon Lightsail](https://aws.amazon.com/blogs/aws/introducing-openclaw-on-amazon-lightsail-to-run-your-autonomous-private-ai-agents/) (4 Mar 2026) | [OpenClaw on Lightsail Security](https://dev.to/aws-heroes/i-deployed-openclaw-on-aws-and-heres-what-i-found-as-a-cloud-security-engineer-3p9i)
+- **AWS/Bedrock AgentCore**: Github: [sample-host-openclaw-on-amazon-bedrock-agentcore](https://github.com/aws-samples/sample-host-openclaw-on-amazon-bedrock-agentcore) | [Blog post](https://dev.to/aws-builders/openclaw-on-aws-agentcore-secure-serverless-production-ready-i8n)
+- **AWS EC2**: Github: [sample-OpenClaw-on-AWS-with-Bedrock](https://github.com/aws-samples/sample-OpenClaw-on-AWS-with-Bedrock)
 - **Digital Ocean**: [Marketplace](https://marketplace.digitalocean.com/apps/openclaw) | [Announcement](https://www.digitalocean.com/blog/moltbot-on-digitalocean)
 - **Kimi**: [Kimi Claw](https://www.kimi.com/bot)
 
@@ -75,6 +80,8 @@ openclaw update     # Update OpenClaw
 openclaw doctor     # Check system health
 ```
 
+## 6. OpenClaw Security
+
 Security audit ([docs](https://docs.openclaw.ai/gateway/security)):
 
 ```bash
@@ -83,9 +90,26 @@ openclaw security audit --fix
 ```
 
 
-## 6. FAQ
+## 7. FAQ
 
-### 6.1 Using MCPs vs Code Execution
+### 7.1 OpenClaw Channel Options
+
+| **Criteria**            | **Telegram**                        | **WhatsApp**                                          | **Slack**                           | **Discord**                   |
+| ----------------------- | ----------------------------------- | ----------------------------------------------------- | ----------------------------------- | ----------------------------- |
+| **Effort to Set Up**    | **Low** (fastest)                   | **Medium-High**                                       | **Medium-High**                     | **Medium**                    |
+| **Method**              | Official Bot API (via `@BotFather`) | Baileys (reverse engineers the WhatsApp web protocol) | Slack App (Socket Mode or Webhooks) | Discord Bot Application       |
+| **Official?**           | Yes                                 | No (Account ban risk)                                 | Yes                                 | Yes                           |
+| **Key Requirement**     | A Telegram bot token                | **Dedicated SIM/eSIM** highly recommended.            | Workspace Admin permissions         | Developer Portal access       |
+| **Phone Number?**       | No (Bot username only)              | **Yes.** Needs a real mobile number.                  | No                                  | No                            |
+| **Technical Expertise** | Beginner-friendly                   | Medium                                                | Medium-High (Scopes/OAuth)          | Medium-High (Roles/Intents)   |
+| **Security Risk**       | Moderate (Bot-based)                | **High** (number exposure)                            | Low-Moderate (Internal/Workspace)   | Moderate (Role-based)         |
+| **Stability**           | Very Stable                         | **Fragile** (Breaks on WhatsApp updates)              | Very Stable                         | Stable                        |
+| **Multi-user setup***   | Moderate                            | Difficult                                             | Easiest                             | Easiest                       |
+| **Best For**            | Solo users & Quick starts.          | Mobile-first & Personal use.                          | Technical teams/Workflows.          | Community/Team collaboration. |
+
+
+### 7.2 Using MCPs vs Code Execution
 
 1. [Code execution with MCP: Building more efficient agents](https://www.anthropic.com/engineering/code-execution-with-mcp) | Anthropic
 2. [Code Mode: the better way to use MCP](https://blog.cloudflare.com/code-mode/) | The Cloudflare Blog
+
