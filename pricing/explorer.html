@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Explorer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+--bg:       #060a12;
+--panel-bg: #0b1120;
+--border:   #1e3050;
+--muted:    #3a5070;
+--text:     #e2e8f0;
+--subtext:  #64748b;
+}
+body {
+background: var(--bg);
+color: var(--text);
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+height: 100vh;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+}
+/* ── Header ──────────────────────────────────────────────────── */
+header {
+padding: 9px 18px;
+border-bottom: 1px solid var(--border);
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-shrink: 0;
+background: #080d18;
+gap: 12px;
+}
+.header-left h1 {
+font-size: 13px;
+font-weight: 700;
+color: #94a3b8;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+}
+.header-left p {
+font-size: 10.5px;
+color: var(--muted);
+margin-top: 2px;
+}
+.header-right {
+display: flex;
+align-items: center;
+gap: 8px;
+flex-shrink: 0;
+}
+#play-btn {
+display: flex;
+align-items: center;
+gap: 6px;
+background: #111c2e;
+border: 1px solid var(--border);
+border-radius: 7px;
+color: #94a3b8;
+font-size: 11px;
+font-family: inherit;
+padding: 5px 13px;
+cursor: pointer;
+transition: all 0.2s;
+white-space: nowrap;
+}
+#play-btn:hover { background: #1a2a40; color: var(--text); border-color: #2e4a70; }
+#play-btn.playing { color: #4ade80; border-color: #166534; }
+#play-btn.paused  { color: #facc15; border-color: #854d0e; }
+/* Animation progress bar (full width, below header) */
+#progress-wrap {
+height: 3px;
+background: #0c1828;
+flex-shrink: 0;
+position: relative;
+}
+#progress-fill {
+height: 100%;
+width: 0%;
+border-radius: 0 2px 2px 0;
+transition: width linear;
+}
+/* ── Filter bar ──────────────────────────────────────────────── */
+#filter-bar {
+display: flex;
+gap: 6px;
+padding: 8px 14px;
+flex-wrap: wrap;
+flex-shrink: 0;
+border-bottom: 1px solid var(--border);
+background: #080d18;
+align-items: center;
+}
+.filter-label {
+font-size: 9.5px;
+color: var(--muted);
+text-transform: uppercase;
+letter-spacing: 0.08em;
+margin-right: 2px;
+}
+.filter-pill {
+font-size: 10px;
+font-weight: 600;
+padding: 2px 9px;
+border-radius: 20px;
+border: 1.5px solid;
+cursor: pointer;
+opacity: 0.4;
+transition: opacity 0.2s;
+user-select: none;
+letter-spacing: 0.04em;
+}
+.filter-pill:hover { opacity: 0.7; }
+.filter-pill.on { opacity: 1; }
+/* ── Layout ──────────────────────────────────────────────────── */
+#main {
+display: flex;
+flex: 1;
+min-height: 0;
+}
+/* ── Chart ───────────────────────────────────────────────────── */
+#chart-area {
+flex: 1;
+min-width: 0;
+padding: 16px 12px 12px 16px;
+}
+#chart-area svg {
+width: 100%;
+height: 100%;
+display: block;
+overflow: visible;
+}
+/* SVG dots */
+.dot {
+cursor: pointer;
+transition: opacity 0.25s ease, filter 0.15s ease;
+}
+.dot:hover { filter: brightness(1.5) drop-shadow(0 0 5px currentColor); }
+.dot.selected { filter: brightness(1.4) drop-shadow(0 0 8px currentColor); }
+.ebar { pointer-events: none; transition: opacity 0.25s; }
+.rank-lbl { pointer-events: none; transition: opacity 0.25s; font-size: 9px; font-family: system-ui; font-weight: 700; }
+/* Pulsing highlight group */
+#hl-group {
+pointer-events: none;
+transition: transform 0.62s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes pulse-ring {
+  0%   { r: 9;  opacity: 0.85; stroke-width: 2;   }
+  100% { r: 38; opacity: 0;    stroke-width: 0.5; }
+}
+@keyframes pulse-ring-2 {
+  0%   { r: 9;  opacity: 0.5;  stroke-width: 1.5; }
+  100% { r: 38; opacity: 0;    stroke-width: 0.5; }
+}
+.hl-ring-1 { animation: pulse-ring   1.8s ease-out infinite;       fill: none; }
+.hl-ring-2 { animation: pulse-ring-2 1.8s ease-out infinite 0.55s; fill: none; }
+/* Clicked-dot selection ring (paused state) */
+#sel-ring {
+pointer-events: none;
+fill: none;
+stroke-width: 2;
+display: none;
+}
+@keyframes spin-ring {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -100; }
+}
+/* SVG axis */
+.grid-line  { stroke: #2a4060; stroke-width: 0.8; stroke-dasharray: 4 4; }
+.axis-line  { stroke: #3d6080; stroke-width: 1.5; }
+.tick-text  { fill: #6a90b0; font-size: 9.5px; font-family: system-ui; }
+.axis-title { fill: #6a90b0; font-size: 11px;  font-family: system-ui; }
+/* Hover name tooltip */
+#htip {
+position: fixed;
+display: none;
+background: #111e30;
+border: 1px solid #263548;
+border-radius: 6px;
+padding: 5px 9px;
+font-size: 11px;
+font-family: 'SF Mono', monospace;
+color: #94a3b8;
+pointer-events: none;
+z-index: 999;
+white-space: nowrap;
+}
+/* ── Right panel ─────────────────────────────────────────────── */
+#info-panel {
+width: 290px;
+flex-shrink: 0;
+border-left: 1px solid var(--border);
+background: var(--panel-bg);
+display: flex;
+flex-direction: column;
+position: relative;
+overflow: hidden;
+}
+/* Rank pills (animation indicator at top of panel) */
+#rank-pills {
+display: flex;
+gap: 5px;
+padding: 12px 16px 10px;
+border-bottom: 1px solid var(--border);
+flex-shrink: 0;
+background: #080f1c;
+}
+.rank-pill {
+width: 25px;
+height: 25px;
+border-radius: 50%;
+border: 1.5px solid var(--border);
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 10px;
+font-weight: 700;
+color: var(--muted);
+cursor: pointer;
+transition: all 0.22s;
+user-select: none;
+flex-shrink: 0;
+}
+.rank-pill:hover { border-color: #4a6080; color: #94a3b8; }
+.rank-pill.active {
+color: var(--pc);
+border-color: var(--pc);
+background: color-mix(in srgb, var(--pc) 14%, transparent);
+}
+/* Empty state */
+#empty-state {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 10px;
+color: var(--muted);
+padding: 30px;
+text-align: center;
+}
+#empty-state svg { opacity: 0.3; }
+#empty-state p { font-size: 12px; line-height: 1.6; }
+/* Model card */
+#model-card {
+display: none;
+flex-direction: column;
+flex: 1;
+padding: 16px 18px 14px;
+overflow-y: auto;
+min-height: 0;
+}
+@keyframes card-in {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.card-anim { animation: card-in 0.3s ease-out both; }
+/* Ghost rank */
+#ghost-rank {
+position: absolute;
+right: 8px;
+top: 60px;
+font-size: 96px;
+font-weight: 900;
+line-height: 1;
+letter-spacing: -0.06em;
+opacity: 0.06;
+pointer-events: none;
+user-select: none;
+}
+.card-top {
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 4px;
+}
+#c-provider {
+font-size: 10px;
+font-weight: 800;
+text-transform: uppercase;
+letter-spacing: 0.13em;
+}
+#c-rank-badge {
+font-size: 10px;
+color: var(--subtext);
+background: #0f1a2a;
+border: 1px solid var(--border);
+border-radius: 5px;
+padding: 2px 8px;
+}
+#c-model {
+font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+font-size: 10.5px;
+color: var(--subtext);
+word-break: break-all;
+line-height: 1.45;
+margin-bottom: 14px;
+padding-bottom: 12px;
+border-bottom: 1px solid var(--border);
+}
+.section-title {
+font-size: 9px;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(--muted);
+margin-bottom: 8px;
+margin-top: 12px;
+}
+.section-title:first-of-type { margin-top: 0; }
+.bar-row { margin-bottom: 8px; }
+.bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.bar-label { font-size: 10px; color: var(--muted); }
+.bar-value { font-size: 14px; font-weight: 700; }
+.bar-track { height: 6px; background: #0f1a2c; border-radius: 4px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 4px; width: 0%; transition: width 0.65s cubic-bezier(0.4,0,0.2,1); }
+.spread-chip {
+display: inline-block;
+margin-top: 4px;
+margin-bottom: 12px;
+font-size: 10px;
+padding: 3px 8px;
+border-radius: 4px;
+border: 1px solid;
+}
+.cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.cost-cell { background: #0a1424; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.cost-label { font-size: 9px; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 2px; }
+.cost-value { font-size: 15px; font-weight: 700; }
+.value-box {
+background: #080f1c;
+border: 1px solid var(--border);
+border-radius: 8px;
+padding: 9px 12px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 12px;
+}
+.vs-left .vs-label { font-size: 10px; color: var(--muted); }
+.vs-left .vs-sub   { font-size: 9px;  color: var(--muted); margin-top: 2px; }
+.vs-value { font-size: 17px; font-weight: 800; }
+#c-note {
+font-size: 10.5px;
+color: var(--subtext);
+line-height: 1.6;
+background: #0a1424;
+border: 1px solid var(--border);
+border-radius: 8px;
+padding: 9px 12px;
+}
+#c-note strong { color: var(--text); }
+/* Paused badge shown in panel when animation is paused */
+#paused-badge {
+display: none;
+align-items: center;
+justify-content: center;
+gap: 6px;
+padding: 6px 12px;
+background: #1a1200;
+border-bottom: 1px solid #3d2800;
+font-size: 10.5px;
+color: #854d0e;
+flex-shrink: 0;
+}
+#paused-badge.show { display: flex; }
+#paused-badge button {
+background: #3d2800;
+border: 1px solid #854d0e;
+border-radius: 5px;
+color: #facc15;
+font-size: 10px;
+font-family: inherit;
+padding: 2px 8px;
+cursor: pointer;
+}
+#paused-badge button:hover { background: #4d3500; }
+</style>
+</head>
+<body>
+<header>
+<div class="header-left">
+<h1>LLM Performance Explorer</h1>
+<p>Animation cycles top 8 · click any dot to pause · avg score (Y) vs output cost $/M (X, log)</p>
+</div>
+<div class="header-right">
+<button id="play-btn" class="playing">⏸ Pause</button>
+</div>
+</header>
+<div id="progress-wrap">
+<div id="progress-fill"></div>
+</div>
+<div id="filter-bar">
+<span class="filter-label">Providers:</span>
+</div>
+<div id="main">
+<div id="chart-area">
+<svg id="chart" viewBox="0 0 700 420" preserveAspectRatio="xMidYMid meet"
+xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<div id="info-panel">
+<!-- Top-8 rank pills (animation position indicator) -->
+<div id="rank-pills"></div>
+<!-- Paused notice -->
+<div id="paused-badge">
+      ⏸ Animation paused
+<button id="resume-btn">▶ Resume</button>
+</div>
+<!-- Empty state -->
+<div id="empty-state">
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+<circle cx="18" cy="18" r="16" stroke="#3a5070" stroke-width="2"/>
+<circle cx="18" cy="18" r="6"  fill="#3a5070"/>
+<line x1="18" y1="2"  x2="18" y2="10" stroke="#3a5070" stroke-width="2"/>
+<line x1="18" y1="26" x2="18" y2="34" stroke="#3a5070" stroke-width="2"/>
+<line x1="2"  y1="18" x2="10" y2="18" stroke="#3a5070" stroke-width="2"/>
+<line x1="26" y1="18" x2="34" y2="18" stroke="#3a5070" stroke-width="2"/>
+</svg>
+<p>Animation starting…<br>or click any dot to inspect</p>
+</div>
+<!-- Model card -->
+<div id="model-card">
+<div id="ghost-rank"></div>
+<div class="card-top">
+<span id="c-provider"></span>
+<span id="c-rank-badge"></span>
+</div>
+<div id="c-model"></div>
+<div class="section-title">Performance</div>
+<div class="bar-row">
+<div class="bar-header">
+<span class="bar-label">Average Score</span>
+<span class="bar-value" id="c-avg"></span>
+</div>
+<div class="bar-track"><div class="bar-fill" id="b-avg"></div></div>
+</div>
+<div class="bar-row">
+<div class="bar-header">
+<span class="bar-label">Best Score</span>
+<span class="bar-value" id="c-best"></span>
+</div>
+<div class="bar-track"><div class="bar-fill" id="b-best" style="opacity:0.5"></div></div>
+</div>
+<div class="spread-chip" id="c-spread"></div>
+<div class="section-title">Cost per Million Tokens</div>
+<div class="cost-grid">
+<div class="cost-cell">
+<div class="cost-label">INPUT</div>
+<div class="cost-value" id="c-input"></div>
+</div>
+<div class="cost-cell">
+<div class="cost-label">OUTPUT</div>
+<div class="cost-value" id="c-output"></div>
+</div>
+</div>
+<div class="value-box">
+<div class="vs-left">
+<div class="vs-label">Value Score</div>
+<div class="vs-sub">avg score ÷ output $/M</div>
+</div>
+<div class="vs-value" id="c-vs"></div>
+</div>
+<div id="c-note"></div>
+</div>
+</div>
+</div>
+<div id="htip"></div>
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────
+const ALL = [
+  { rank: 1,  model: 'anthropic/claude-opus-4.6',              best: 87.4, avg: 81.9, input: 5.00,  output: 25.00 },
+  { rank: 2,  model: 'xiaomi/mimo-v2-omni',                    best: 85.6, avg: 81.2, input: 0.40,  output: 2.00  },
+  { rank: 3,  model: 'xiaomi/mimo-v2-pro',                     best: 84.0, avg: 81.1, input: 1.00,  output: 3.00  },
+  { rank: 4,  model: 'qwen/qwen3.5-122b-a10b',                 best: 85.5, avg: 80.8, input: 0.26,  output: 2.08  },
+  { rank: 5,  model: 'openai/gpt-5.4',                         best: 86.4, avg: 80.6, input: 2.50,  output: 15.00 },
+  { rank: 6,  model: 'z-ai/glm-5-turbo',                       best: 84.9, avg: 80.6, input: 0.96,  output: 3.20  },
+  { rank: 7,  model: 'anthropic/claude-sonnet-4',              best: 80.5, avg: 80.5, input: 3.00,  output: 15.00 },
+  { rank: 8,  model: 'qwen/qwen3.5-397b-a17b',                 best: 89.1, avg: 80.4, input: 0.39,  output: 2.34  },
+  { rank: 9,  model: 'minimax/minimax-m2.7',                   best: 86.2, avg: 80.4, input: 0.30,  output: 1.20  },
+  { rank: 10, model: 'anthropic/claude-sonnet-4.5',            best: 88.2, avg: 80.1, input: 3.00,  output: 15.00 },
+  { rank: 11, model: 'minimax/minimax-m2.1',                   best: 84.3, avg: 79.7, input: 0.27,  output: 0.95  },
+  { rank: 12, model: 'z-ai/glm-5',                             best: 86.4, avg: 79.7, input: 0.72,  output: 2.30  },
+  { rank: 13, model: 'anthropic/claude-sonnet-4.6',            best: 86.9, avg: 79.2, input: 3.00,  output: 15.00 },
+  { rank: 14, model: 'qwen/qwen3.5-plus-02-15',                best: 85.8, avg: 79.1, input: 0.26,  output: 1.56  },
+  { rank: 15, model: 'qwen/qwen3-coder-next',                  best: 79.1, avg: 79.1, input: 0.12,  output: 0.75  },
+  { rank: 16, model: 'qwen/qwen3.5-27b',                       best: 90.0, avg: 78.5, input: 0.20,  output: 1.56  },
+  { rank: 17, model: 'moonshotai/kimi-k2.5',                   best: 84.8, avg: 78.5, input: 0.45,  output: 2.20  },
+  { rank: 18, model: 'anthropic/claude-opus-4.5',              best: 85.4, avg: 78.4, input: 5.00,  output: 25.00 },
+  { rank: 19, model: 'minimax/minimax-m2.5',                   best: 86.6, avg: 78.1, input: 0.20,  output: 1.20  },
+  { rank: 20, model: 'nvidia/nemotron-3-super-120b-a12b',      best: 85.6, avg: 76.8, input: 0.10,  output: 0.50  },
+  { rank: 21, model: 'z-ai/glm-4.5-air',                       best: 85.7, avg: 76.5, input: 0.13,  output: 0.85  },
+  { rank: 22, model: 'anthropic/claude-haiku-4.5',             best: 82.0, avg: 76.0, input: 1.00,  output: 5.00  },
+  { rank: 23, model: 'stepfun/step-3.5-flash',                 best: 82.6, avg: 75.4, input: 0.10,  output: 0.30  },
+  { rank: 24, model: 'google/gemini-3.1-pro-preview',          best: 83.2, avg: 75.0, input: 2.00,  output: 12.00 },
+  { rank: 25, model: 'mistralai/devstral-2512',                best: 82.0, avg: 74.4, input: 0.40,  output: 2.00  },
+  { rank: 26, model: 'google/gemini-3-flash-preview',          best: 80.0, avg: 72.8, input: 0.50,  output: 3.00  },
+  { rank: 27, model: 'qwen/qwen3-max-thinking',                best: 80.3, avg: 71.8, input: 0.78,  output: 3.90  },
+  { rank: 28, model: 'qwen/qwen3.5-35b-a3b',                   best: 78.4, avg: 71.7, input: 0.16,  output: 1.30  },
+  { rank: 29, model: 'x-ai/grok-4.1-fast',                     best: 80.0, avg: 70.0, input: 0.20,  output: 0.50  },
+  { rank: 30, model: 'nvidia/nemotron-3-super-120b-a12b:free', best: 75.0, avg: 69.6, input: 0,     output: 0,    free: true },
+  { rank: 31, model: 'deepseek/deepseek-v3.2',                 best: 81.9, avg: 68.1, input: 0.26,  output: 0.38  },
+  { rank: 32, model: 'openai/gpt-5-mini',                      best: 78.3, avg: 67.7, input: 0.25,  output: 2.00  },
+];
+const TOP8 = ALL.filter(d => d.rank <= 8).sort((a, b) => a.rank - b.rank);
+const DWELL_MS = 3000;
+const PROVIDERS = {
+'anthropic':  { color: '#f97316', label: 'Anthropic'  },
+'qwen':       { color: '#a855f7', label: 'Qwen'        },
+'openai':     { color: '#22c55e', label: 'OpenAI'      },
+'google':     { color: '#3b82f6', label: 'Google'      },
+'x-ai':       { color: '#ef4444', label: 'xAI'         },
+'z-ai':       { color: '#818cf8', label: 'Z-AI'        },
+'mistralai':  { color: '#eab308', label: 'Mistral'     },
+'minimax':    { color: '#ec4899', label: 'MiniMax'     },
+'xiaomi':     { color: '#22d3ee', label: 'Xiaomi'      },
+'nvidia':     { color: '#84cc16', label: 'NVIDIA'      },
+'moonshotai': { color: '#2dd4bf', label: 'Moonshot'    },
+'stepfun':    { color: '#fb923c', label: 'StepFun'     },
+'deepseek':   { color: '#c084fc', label: 'DeepSeek'    },
+};
+function prov(model) { return model.split(':')[0].split('/')[0]; }
+function info(model) { return PROVIDERS[prov(model)] || { color: '#94a3b8', label: prov(model) }; }
+// ── Scales ────────────────────────────────────────────────────────────────
+const M  = { top: 36, right: 28, bottom: 52, left: 60 };
+const VW = 700, VH = 420;
+const PW = VW - M.left - M.right;
+const PH = VH - M.top  - M.bottom;
+const FREE_X = 0.09;
+function xLog(cost) {
+const v = cost <= 0 ? FREE_X : cost;
+const lo = Math.log10(0.07), hi = Math.log10(30);
+return (Math.log10(v) - lo) / (hi - lo) * PW;
+}
+function yLin(score) { return PH - (score - 63) / (92 - 63) * PH; }
+// ── SVG ───────────────────────────────────────────────────────────────────
+const NS  = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('chart');
+function el(tag, attrs, parent) {
+const e = document.createElementNS(NS, tag);
+if (attrs) for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+if (parent) parent.appendChild(e);
+return e;
+}
+function tx(s, attrs, parent) { const e = el('text', attrs, parent); e.textContent = s; return e; }
+const root = el('g', { transform: `translate(${M.left},${M.top})` }, svg);
+// Grid
+for (const y of [65,68,71,74,77,80,83,86,89,92]) {
+const yy = yLin(y);
+el('line', { x1:0, y1:yy, x2:PW, y2:yy, class:'grid-line' }, root);
+tx(`${y}%`, { x:-8, y:yy+4, class:'tick-text', 'text-anchor':'end' }, root);
+}
+for (const [v, label] of [[0.1,'$0.10'],[0.3,'$0.30'],[1,'$1'],[3,'$3'],[10,'$10'],[25,'$25']]) {
+const xx = xLog(v);
+el('line', { x1:xx, y1:0, x2:xx, y2:PH, class:'grid-line' }, root);
+tx(label, { x:xx, y:PH+14, class:'tick-text', 'text-anchor':'middle' }, root);
+}
+el('line', { x1:xLog(FREE_X), y1:0, x2:xLog(FREE_X), y2:PH,
+stroke:'#16a34a22', 'stroke-width':1, 'stroke-dasharray':'3 3' }, root);
+tx('FREE', { x:xLog(FREE_X), y:PH+14, fill:'#145c28', 'font-size':8.5,
+'text-anchor':'middle', 'font-family':'system-ui', 'font-weight':700 }, root);
+el('rect', { x:0, y:0, width:xLog(3.5), height:yLin(77),
+fill:'#071a0e', opacity:0.35, rx:3 }, root);
+tx('High perf · Low cost', { x:6, y:11, fill:'#163d22', 'font-size':8.5,
+'font-family':'system-ui', 'font-style':'italic' }, root);
+el('line', { x1:0, y1:PH, x2:PW, y2:PH, class:'axis-line' }, root);
+el('line', { x1:0, y1:0,  x2:0,  y2:PH, class:'axis-line' }, root);
+tx('Output cost $/M (log scale)', { x:PW/2, y:PH+42, class:'axis-title', 'text-anchor':'middle' });
+tx('Avg benchmark score (%)', { class:'axis-title', 'text-anchor':'middle',
+transform:`rotate(-90) translate(-${PH/2}, -46)` }, root);
+// ── Draw dots ─────────────────────────────────────────────────────────────
+const dotEls = {};
+const dotsG  = el('g', {}, root);
+const sorted = [...ALL].sort((a, b) => (b.output||0) - (a.output||0));
+for (const d of sorted) {
+const pi  = info(d.model);
+const cx  = xLog(d.free ? FREE_X : d.output);
+const cyA = yLin(d.avg);
+const cyB = yLin(d.best);
+const g   = el('g', {}, dotsG);
+const ebar = el('line', { x1:cx, y1:cyA, x2:cx, y2:cyB,
+stroke:pi.color, 'stroke-width':1.2, opacity:0.35, class:'ebar' }, g);
+const cap  = el('line', { x1:cx-4, y1:cyB, x2:cx+4, y2:cyB,
+stroke:pi.color, 'stroke-width':1.2, opacity:0.35, class:'ebar' }, g);
+const dot  = el('circle', { cx, cy:cyA, r: d.rank <= 8 ? 7 : 5.5,
+fill:pi.color, class:'dot',
+style: d.free ? `stroke:${pi.color};stroke-width:1.5;stroke-dasharray:3 2` : '' }, g);
+let lbl = null;
+if (d.rank <= 8) {
+lbl = tx(`#${d.rank}`, { x:cx+9, y:cyA+4, fill:pi.color, class:'rank-lbl', opacity:0.7 }, g);
+  }
+dotEls[d.rank] = { dot, ebar, cap, lbl, cx, cy: cyA, color: pi.color };
+dot.addEventListener('click', () => userSelectModel(d));
+dot.addEventListener('mouseenter', e => { htip.textContent = d.model; htip.style.display = 'block'; moveTip(e); });
+dot.addEventListener('mousemove',  moveTip);
+dot.addEventListener('mouseleave', () => { htip.style.display = 'none'; });
+}
+// ── Selection ring (paused state) ─────────────────────────────────────────
+const selRing = el('circle', { id:'sel-ring', r:11, 'stroke-dasharray':'6 3',
+'stroke-width':1.5, fill:'none', display:'none' }, root);
+// ── Highlight group (animation state) ────────────────────────────────────
+const hlGroup = el('g', { id:'hl-group' }, root);
+const hlRing1 = el('circle', { r:9, class:'hl-ring-1' }, hlGroup);
+const hlRing2 = el('circle', { r:9, class:'hl-ring-2' }, hlGroup);
+const hlDot   = el('circle', { r:7, fill:'#fff' }, hlGroup);
+hlGroup.style.opacity = '0'; // hidden until first activate
+// ── Hover tooltip ─────────────────────────────────────────────────────────
+const htip = document.getElementById('htip');
+function moveTip(e) {
+let x = e.clientX + 14, y = e.clientY - 28;
+if (x + htip.offsetWidth > window.innerWidth - 8) x = e.clientX - htip.offsetWidth - 14;
+htip.style.left = x + 'px';
+htip.style.top  = y + 'px';
+}
+// ── Rank pills ────────────────────────────────────────────────────────────
+const pillsWrap = document.getElementById('rank-pills');
+const pills = {};
+for (const d of TOP8) {
+const pi   = info(d.model);
+const pill = document.createElement('div');
+pill.className = 'rank-pill';
+pill.textContent = d.rank;
+pill.style.setProperty('--pc', pi.color);
+pill.title = d.model;
+pill.addEventListener('click', () => {
+animIdx = TOP8.findIndex(x => x.rank === d.rank);
+resumeAnim(true);
+  });
+pillsWrap.appendChild(pill);
+pills[d.rank] = pill;
+}
+// ── Provider filter pills ─────────────────────────────────────────────────
+const activeProviders = new Set(Object.keys(PROVIDERS));
+const filterBar = document.getElementById('filter-bar');
+const presentProviders = [...new Set(ALL.map(d => prov(d.model)))];
+for (const p of presentProviders) {
+const pi   = PROVIDERS[p] || { color: '#94a3b8', label: p };
+const pill = document.createElement('div');
+pill.className = 'filter-pill on';
+pill.textContent = pi.label;
+pill.style.borderColor = pi.color;
+pill.style.color       = pi.color;
+pill.addEventListener('click', () => {
+if (activeProviders.has(p)) { activeProviders.delete(p); pill.classList.remove('on'); }
+else                        { activeProviders.add(p);    pill.classList.add('on');    }
+applyFilter();
+  });
+filterBar.appendChild(pill);
+}
+function applyFilter() {
+for (const d of ALL) {
+const show = activeProviders.has(prov(d.model));
+const { dot, ebar, cap, lbl } = dotEls[d.rank];
+dot.style.opacity  = show ? '' : '0.04';
+ebar.style.opacity = show ? '' : '0.02';
+cap.style.opacity  = show ? '' : '0.02';
+if (lbl) lbl.style.opacity = show ? '' : '0.02';
+dot.style.pointerEvents = show ? '' : 'none';
+  }
+}
+// ── Animation state ───────────────────────────────────────────────────────
+let animIdx     = 0;
+let animPlaying = true;
+let dwellTimer  = null;
+let timerStart  = 0;
+let timerElapsed = 0;
+function animAdvance() {
+animIdx = (animIdx + 1) % TOP8.length;
+animActivate(animIdx);
+}
+function animActivate(idx, immediate = false) {
+const d     = TOP8[idx];
+const color = info(d.model).color;
+const { cx, cy } = dotEls[d.rank];
+// Move hl-group
+hlGroup.style.opacity    = '1';
+hlGroup.style.transform  = `translate(${cx}px, ${cy}px)`;
+hlGroup.style.transition = immediate
+    ? 'transform 0.2s ease, opacity 0.3s'
+    : 'transform 0.62s cubic-bezier(0.4,0,0.2,1), opacity 0.3s';
+hlRing1.setAttribute('stroke', color);
+hlRing2.setAttribute('stroke', color);
+hlDot.setAttribute('fill', color);
+// Hide click-selection ring
+selRing.setAttribute('display', 'none');
+// Dot opacities
+applyDotHighlight(d.rank);
+// Pills
+for (const r in pills) {
+const active = parseInt(r) === d.rank;
+pills[r].classList.toggle('active', active);
+  }
+// Update panel
+updatePanel(d);
+// Progress bar
+if (animPlaying) {
+startProgress(DWELL_MS, color);
+timerStart   = Date.now();
+timerElapsed = 0;
+dwellTimer   = setTimeout(animAdvance, DWELL_MS);
+  }
+}
+function applyDotHighlight(activeRank) {
+for (const r in dotEls) {
+const { dot, ebar, cap, lbl } = dotEls[r];
+const active = parseInt(r) === activeRank;
+dot.setAttribute('opacity',  active ? 1 : 0.22);
+ebar.setAttribute('opacity', active ? 0.65 : 0.07);
+cap.setAttribute('opacity',  active ? 0.65 : 0.07);
+if (lbl) lbl.setAttribute('opacity', active ? 1 : 0.07);
+  }
+}
+function startProgress(duration, color) {
+const fill = document.getElementById('progress-fill');
+fill.style.background  = color;
+fill.style.transition  = 'none';
+fill.style.width       = '0%';
+requestAnimationFrame(() => requestAnimationFrame(() => {
+fill.style.transition = `width ${duration}ms linear`;
+fill.style.width      = '100%';
+  }));
+}
+function stopProgress() {
+const fill = document.getElementById('progress-fill');
+fill.style.transition = 'none';
+fill.style.width = '0%';
+}
+// ── Pause / Resume ────────────────────────────────────────────────────────
+const playBtn    = document.getElementById('play-btn');
+const pausedBadge = document.getElementById('paused-badge');
+function pauseAnim() {
+animPlaying = false;
+clearTimeout(dwellTimer);
+timerElapsed = Date.now() - timerStart;
+stopProgress();
+playBtn.textContent = '▶ Play';
+playBtn.className   = 'paused';
+pausedBadge.classList.add('show');
+}
+function resumeAnim(fromPill = false) {
+animPlaying = true;
+playBtn.textContent = '⏸ Pause';
+playBtn.className   = 'playing';
+pausedBadge.classList.remove('show');
+// Restore all dots to normal before animating
+for (const r in dotEls) {
+const { dot } = dotEls[r];
+dot.classList.remove('selected');
+  }
+if (fromPill) {
+// Jump straight to the pill-chosen index
+animActivate(animIdx, true);
+  } else {
+// Advance to next then play
+animIdx = (animIdx + 1) % TOP8.length;
+animActivate(animIdx, true);
+  }
+}
+playBtn.addEventListener('click', () => {
+if (animPlaying) pauseAnim();
+else             resumeAnim();
+});
+document.getElementById('resume-btn').addEventListener('click', () => resumeAnim());
+// ── User clicks a dot ─────────────────────────────────────────────────────
+function userSelectModel(d) {
+pauseAnim();
+const color = info(d.model).color;
+// Dim all, highlight clicked
+applyDotHighlight(d.rank);
+dotEls[d.rank].dot.classList.add('selected');
+// Hide pulsing hl-group, show spin ring on clicked dot
+hlGroup.style.opacity = '0';
+const { cx, cy } = dotEls[d.rank];
+selRing.setAttribute('cx', cx);
+selRing.setAttribute('cy', cy);
+selRing.setAttribute('stroke', color);
+selRing.setAttribute('display', '');
+selRing.style.animation = 'none';
+void selRing.offsetWidth;
+selRing.style.animation = 'spin-ring 3s linear infinite';
+// Deactivate pills (not in anim anymore)
+for (const r in pills) pills[r].classList.remove('active');
+updatePanel(d);
+}
+// Click SVG background → resume animation
+svg.addEventListener('click', e => {
+if (e.target === svg || e.target.tagName === 'svg') {
+if (!animPlaying) resumeAnim();
+  }
+});
+// ── Update right panel ────────────────────────────────────────────────────
+function updatePanel(d) {
+const pi    = info(d.model);
+const color = pi.color;
+document.getElementById('empty-state').style.display = 'none';
+const card = document.getElementById('model-card');
+card.style.display = 'flex';
+card.classList.remove('card-anim');
+void card.offsetWidth;
+card.classList.add('card-anim');
+document.getElementById('ghost-rank').textContent = `#${d.rank}`;
+document.getElementById('ghost-rank').style.color = color;
+const provEl = document.getElementById('c-provider');
+provEl.textContent = pi.label;
+provEl.style.color = color;
+document.getElementById('c-rank-badge').textContent = `Rank #${d.rank} of ${ALL.length}`;
+document.getElementById('c-model').textContent = d.model;
+// Bars
+const Y_MIN = 63, Y_MAX = 92;
+document.getElementById('c-avg').textContent  = `${d.avg.toFixed(1)}%`;
+document.getElementById('c-avg').style.color  = color;
+document.getElementById('c-best').textContent = `${d.best.toFixed(1)}%`;
+document.getElementById('c-best').style.color = color;
+const bAvg  = document.getElementById('b-avg');
+const bBest = document.getElementById('b-best');
+bAvg.style.background  = color;
+bBest.style.background = color;
+bAvg.style.width = bBest.style.width = '0%';
+requestAnimationFrame(() => requestAnimationFrame(() => {
+bAvg.style.width  = ((d.avg  - Y_MIN) / (Y_MAX - Y_MIN) * 100).toFixed(1) + '%';
+bBest.style.width = ((d.best - Y_MIN) / (Y_MAX - Y_MIN) * 100).toFixed(1) + '%';
+  }));
+// Spread
+const spread     = (d.best - d.avg).toFixed(1);
+const spreadColor = parseFloat(spread) > 6 ? '#facc15' :
+parseFloat(spread) > 3 ? '#94a3b8' : '#4a6080';
+const spreadEl = document.getElementById('c-spread');
+spreadEl.textContent = `↑ +${spread} pp upside  (best outperforms avg by ${((d.best/d.avg-1)*100).toFixed(1)}%)`;
+spreadEl.style.color       = spreadColor;
+spreadEl.style.borderColor = spreadColor + '55';
+spreadEl.style.background  = spreadColor + '11';
+// Costs
+const inEl = document.getElementById('c-input'), outEl = document.getElementById('c-output');
+if (d.free) {
+inEl.innerHTML  = `<span style="color:#4ade80">FREE</span>`;
+outEl.innerHTML = `<span style="color:#4ade80">FREE</span>`;
+  } else {
+inEl.textContent  = `$${d.input.toFixed(2)}`;  inEl.style.color  = color;
+outEl.textContent = `$${d.output.toFixed(2)}`; outEl.style.color = color;
+  }
+// Value score
+const vsEl = document.getElementById('c-vs');
+if (d.free) { vsEl.innerHTML = `<span style="color:#4ade80">∞</span>`; }
+else {
+const vs = (d.avg / d.output).toFixed(1);
+vsEl.textContent = vs;
+vsEl.style.color = parseFloat(vs) > 20 ? '#4ade80' : parseFloat(vs) > 10 ? '#facc15' : color;
+  }
+// Note
+const betterThan   = ALL.filter(x => x.avg < d.avg && x.rank !== d.rank).length;
+const cheaperCount = d.free ? 0 : ALL.filter(x => !x.free && x.output < d.output).length;
+let note = `Outperforms <strong>${betterThan} of ${ALL.length - 1}</strong> models on average.`;
+if (!d.free) note += ` <strong>${cheaperCount}</strong> model${cheaperCount !== 1 ? 's' : ''} cost less per output token.`;
+if (d.rank <= 8) note += ' <strong>Top 8</strong> overall.';
+document.getElementById('c-note').innerHTML = note;
+}
+// ── Kick off ──────────────────────────────────────────────────────────────
+setTimeout(() => animActivate(0, true), 300);
+</script>
+</body>
+</html>
